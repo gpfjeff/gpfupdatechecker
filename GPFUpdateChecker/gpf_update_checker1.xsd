@@ -6,7 +6,14 @@
 	Jeffrey T. Darlington
 	May 12, 2010
 	
-	This XML schema defines ...
+	This XML schema defines the syntax expected by the GPFUpdateChecker library.
+	Applications that wish to use this library for update checking must generate
+	an XML file matching this schema for the update check to parse.  An invalid
+	feed will result in a failed upate check, so the schema should be carefully
+	matched.
+	
+	For more information on the GPFUpdateChecker library, please see our Google
+	Code site:   https://code.google.com/p/gpfupdatechecker/
 -->
 
 <xs:schema
@@ -36,14 +43,15 @@
 		</xs:restriction>
 	</xs:simpleType>
 
-	<!-- YYYYMMDDHHMMSS -->
+	<!-- Timestamp in YYYYMMDDHHMMSS format: -->
 	<xs:simpleType name="timestamp">
 		<xs:restriction base="xs:string">
 			<xs:pattern value="[0-9]{14}"/>
 		</xs:restriction>
 	</xs:simpleType>
 
-	<!-- Major.Minor.SubMinor.Revision -->
+	<!-- Version numbers are in Major.Minor.SubMinor.Revision format, where
+	     each portion must be an integer: -->
 	<xs:simpleType name="verString">
 		<xs:restriction base="xs:string">
 			<xs:pattern value="[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+"/>
@@ -52,19 +60,25 @@
 
 	<!-- ******************************************************************* -->
 
-	<!-- Define the individual site parameter definition.  A set of parameters
-	     consists primarily of a site token string (often a domain name but it
-		 can be literally any unique string), a string representing the crypto-
-		 graphic hash to use to generate the password, a positive integer
-		 greater than zero specifying the number of hash iterations, an integer
-		 that specifies the character type class (all characters, only alpha-
-		 numerics, etc.), and a positive integer greater than or equal to zero
-		 that represents the limit on the number of characters returned.  If the
-		 character limit is zero, it is assumed that there is no limit imposed.
-		 The number of hash iterations is actuall 1 <= x <= 500; the upper limit
-		 is imposed due to performance issues on Google Android.  There will be
-		 only one of each parameter per site block, so this should be a fairly
-		 simple definition. -->
+	<!-- Define an individual application entry.  This consists of five
+	     elements, each of which may only appear once per entry:
+		 
+		   *  The name element defines the application name.  This is how the
+		      application is uniquely identified within the feed.  This must
+			  match the name value passed into the UpdateChecker constructor
+			  when called by the parent app.
+		   *  The latest version of the application available.  This will be
+		      compared with the applicaton's internal version number; if the
+			  value in the feed is higher, the user will be notified that a new
+			  version is available.
+		   *  The URL where the new installer can be downloaded.
+		   *  The size in bytes (not kilobytes, megabytes, etc.) of the
+		      installer file to be downloaded.  The downloader will use this as
+			  part of the validation and to track the download progress.
+		   *  A Base64-encoded SHA-256 hash or digets of the install file.  The
+		      downloaded file will be hashed and compared to this value to check
+			  it for validation.  If the hash fails, the entire update will
+			  fail. -->
 	<xs:complexType name="appType">
 		<xs:sequence>
 			<xs:element name="name" type="xs:string" minOccurs="1" maxOccurs="1"/>
@@ -75,10 +89,10 @@
 		</xs:sequence>
 	</xs:complexType>
 
-	<!-- Define the site list block.  This is just a list of one or more
-	     individual site blocks as defined above.  There must be at least one
-		 site in the list for the parameter file to be useful.  However, we
-		 won't set an upper limit. -->
+	<!-- A feed may actually contain multiple application entries, each with a
+	     unique name element.  Thus, you can use a single feed to manage
+		 multiple related apps, like the same app compiled for different
+		 platforms.  However, there must be at least one app entry per file. -->
 	<xs:complexType name="appListType">
 		<xs:sequence>
 			<xs:element name="app" type="gpfupdate:appType" minOccurs="1" maxOccurs="unbounded"/>
@@ -110,11 +124,13 @@
 					 just in case it's needed later. -->
 				<xs:element name="comment" type="xs:string" minOccurs="0" maxOccurs="1"/>
 
-				<!-- A timestamp indicating the date of the latest upd -->
+				<!-- A timestamp indicating the date of the latest update to
+				     the feed (NOT the apps): -->
 				<xs:element name="pubDate" type="gpfupdate:timestamp" minOccurs="1" maxOccurs="1"/>
 
 				<!-- The app list block, as defined above.  There should be
-				     only one site list block per file. -->
+				     only one site list block per file, but there may be many
+					 app entries within it. -->
 				<xs:element name="apps" type="gpfupdate:appListType" minOccurs="1" maxOccurs="1"/>
 
 			</xs:sequence>
