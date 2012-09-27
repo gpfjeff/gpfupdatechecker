@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+	GPF Update Checker XML Schema Definition
+	Version 1
+	Jeffrey T. Darlington
+	May 12, 2010
+	
+	This XML schema defines ...
+-->
+
+<xs:schema
+	targetNamespace="http://www.gpf-comics.com/"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:gpfupdate="http://www.gpf-comics.com/"
+	elementFormDefault="qualified"
+	attributeFormDefault="qualified">
+
+	<!-- ******************************************************************* -->
+
+	<!-- Basic type definitions: -->
+
+	<!-- Version can only be 1 (for now): -->
+	<xs:simpleType name="versionType">
+		<xs:restriction base="xs:NMTOKEN">
+			<xs:enumeration value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<!-- Define integers.  I'm not sure if I should be using a home-grown value
+	     here or not; this may get replaced with a standard value later.  The
+		 main concern is that this must be a positive value. -->
+	<xs:simpleType name="integer">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[0-9]+"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<!-- YYYYMMDDHHMMSS -->
+	<xs:simpleType name="timestamp">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[0-9]{14}"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<!-- Major.Minor.SubMinor.Revision -->
+	<xs:simpleType name="verString">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+"/>
+		</xs:restriction>
+	</xs:simpleType>
+
+	<!-- ******************************************************************* -->
+
+	<!-- Define the individual site parameter definition.  A set of parameters
+	     consists primarily of a site token string (often a domain name but it
+		 can be literally any unique string), a string representing the crypto-
+		 graphic hash to use to generate the password, a positive integer
+		 greater than zero specifying the number of hash iterations, an integer
+		 that specifies the character type class (all characters, only alpha-
+		 numerics, etc.), and a positive integer greater than or equal to zero
+		 that represents the limit on the number of characters returned.  If the
+		 character limit is zero, it is assumed that there is no limit imposed.
+		 The number of hash iterations is actuall 1 <= x <= 500; the upper limit
+		 is imposed due to performance issues on Google Android.  There will be
+		 only one of each parameter per site block, so this should be a fairly
+		 simple definition. -->
+	<xs:complexType name="appType">
+		<xs:sequence>
+			<xs:element name="name" type="xs:string" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="currentVer" type="gpfupdate:verString" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="url" type="xs:string" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="size" type="gpfupdate:integer" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="digest" type="xs:string" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- Define the site list block.  This is just a list of one or more
+	     individual site blocks as defined above.  There must be at least one
+		 site in the list for the parameter file to be useful.  However, we
+		 won't set an upper limit. -->
+	<xs:complexType name="appListType">
+		<xs:sequence>
+			<xs:element name="app" type="gpfupdate:appType" minOccurs="1" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- ******************************************************************* -->
+
+	<!-- Define the main body of the XML file: -->
+
+	<!-- The main element: -->
+	<xs:element name="gpfupdate">
+		<xs:complexType>
+			<xs:sequence>
+			
+				<!-- The version number.  This is required. -->
+				<xs:element name="version" type="gpfupdate:versionType" minOccurs="1" maxOccurs="1"/>
+
+				<!-- An optional generator string.  If nothing else, this should
+				     identify which application, including version number,
+					 generated the parameter file.  That will help when it comes
+					 to debugging cross-platform issues. -->
+				<xs:element name="generator" type="xs:string" minOccurs="0" maxOccurs="1"/>
+
+				<!-- An optional comment string.  I'm not sure if this will ever
+				     get used, since these files should be system generated and
+					 never appear decrypted.  That said, I don't see a valid
+					 reason NOT to have it, and adding it now might be easier,
+					 just in case it's needed later. -->
+				<xs:element name="comment" type="xs:string" minOccurs="0" maxOccurs="1"/>
+
+				<!-- A timestamp indicating the date of the latest upd -->
+				<xs:element name="pubDate" type="gpfupdate:timestamp" minOccurs="1" maxOccurs="1"/>
+
+				<!-- The app list block, as defined above.  There should be
+				     only one site list block per file. -->
+				<xs:element name="apps" type="gpfupdate:appListType" minOccurs="1" maxOccurs="1"/>
+
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	
+</xs:schema>

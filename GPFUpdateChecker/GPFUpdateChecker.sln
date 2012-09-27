@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual C# Express 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GPFUpdateChecker", "GPFUpdateChecker\GPFUpdateChecker.csproj", "{7C4762D8-2A6B-4BA8-ADEB-B6C381C415EE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UpdateCheckTester", "..\UpdateCheckTester\UpdateCheckTester\UpdateCheckTester.csproj", "{FC9F2C21-ADB3-444B-A05A-07BE9297CEFE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7C4762D8-2A6B-4BA8-ADEB-B6C381C415EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C4762D8-2A6B-4BA8-ADEB-B6C381C415EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C4762D8-2A6B-4BA8-ADEB-B6C381C415EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C4762D8-2A6B-4BA8-ADEB-B6C381C415EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC9F2C21-ADB3-444B-A05A-07BE9297CEFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC9F2C21-ADB3-444B-A05A-07BE9297CEFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC9F2C21-ADB3-444B-A05A-07BE9297CEFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC9F2C21-ADB3-444B-A05A-07BE9297CEFE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

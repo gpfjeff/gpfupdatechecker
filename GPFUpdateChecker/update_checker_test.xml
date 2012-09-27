@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gpfupdate xmlns="http://www.gpf-comics.com/">
+	<version>1</version>
+	<generator>Jeff's fingers</generator>
+	<comment>This is a test comment.</comment>
+	<pubDate>20100513140600</pubDate>
+	<apps>
+		<app>
+			<name>Test Application</name>
+			<currentVer>1.1.0.0</currentVer>
+			<url>https://gpf-comics.net/Cryptnos_1.1_Setup.exe</url>
+			<size>783850</size>
+			<digest>Dy7ubCve1vAMdqfnkCMm8yHCENBtAoXDQlKWV+yt6X0=</digest>
+		</app>
+	</apps>
+</gpfupdate>
