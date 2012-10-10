@@ -11,7 +11,10 @@
  * When an object wishes to be notified that a new version of an application has been found,
  * it just needs to inherit this interface and implement its methods.
  * 
- * This program is Copyright 2010, Jeffrey T. Darlington.
+ * UPDATES FOR VERSION 1.1:  Added the OnNoUpdateFound() and OnUpdateCheckError()
+ * call-back methods.
+ * 
+ * This program is Copyright 2012, Jeffrey T. Darlington.
  * E-mail:  jeff@gpf-comics.com
  * Web:     http://www.gpf-comics.com/
  * 
@@ -44,17 +47,39 @@ namespace com.gpfcomics.UpdateChecker
     {
         /// <summary>
         /// When a new version of an application is found, the <see cref="UpdateChecker"/>
-        /// will call this method.  All implementors really need to do is call
-        /// UpdateChecker.GetNewerVersion(), passing back the same <see cref="AppMetaData"/>
-        /// they received from the UpdateChecker.
+        /// will call this method.  The simplest implementation is to call
+        /// UpdateChecker.GetNewerVersion(), which will prompt the user to begin the
+        /// download process.  However, if there's anything the main application needs
+        /// to do before prompting the user, this is where those tasks should be performed.
         /// </summary>
         void OnFoundNewerVersion();
 
         /// <summary>
+        /// When no new version of the application is found (i.e. the user already has the
+        /// latest version, not that an error occurred), the <see cref="UpdateChecker"/>
+        /// will all this method.  The simplest implementation for this method is to do
+        /// nothing; this way the update check is completely transparent and the user does
+        /// not need to be bothered.  If, however, the user directly initiates the check by,
+        /// say, clicking a button, the application can be notified when no update was found
+        /// and can provide the necessary feedback.
+        /// </summary>
+        void OnNoUpdateFound();
+
+        /// <summary>
+        /// The <see cref="UpdateChecker"/> handles most of its own error messages, but in
+        /// some instances the calling application may want to perform certain tasks when
+        /// an error in the update check occurs.  The simplest implementation here would be
+        /// to do nothing and let the UpdateChecker display its own messages.  However, if
+        /// the caller wishes to perform some operation when an error occurs, it should
+        /// put that code here.
+        /// </summary>
+        void OnUpdateCheckError();
+
+        /// <summary>
         /// This method is called at some point during the update check process to inform
         /// the listener that they should update the last update check date to the current
-        /// time.  The implementor so record this date somewhere in its settings so it will
-        /// be ready on the next run.
+        /// time.  The implementor should record this date somewhere in its settings so it
+        /// will be ready on the next run.
         /// </summary>
         /// <param name="lastCheck">A <see cref="DateTime"/> representing the new value
         /// for the last update check. The implementing application should store this value

@@ -26,12 +26,14 @@
  * display notification dialogs.  When using this library with a production release, this
  * flag should be set to false, which will hide these errors completely from the user.
  * 
- * UPDATES FOR VERSION 1.1:  Added the debug flag to the constructors, allowing the calling
- * application to set the debug status on start-up.  Changed the default download path to
- * first try the value of %TEMP%, then %TMP%, and finally the desktop as a last resort.
- * Greatly expanded the error messages so the updater won't be so glaringly silent, and made
- * sure all the dialogs generated explicitly say they're coming from the Update Checker,
- * hopefully eliminating any confusion about where they're coming from.
+ * UPDATES FOR VERSION 1.1:  Added the debug flag and update interval in days to the
+ * constructors.  Changed the default download path to first try the value of %TEMP%, then %TMP%,
+ * and finally the desktop as a last resort.  Greatly expanded the error messages so the updater
+ * won't be so glaringly silent, and made sure all the dialogs generated explicitly say they're
+ * coming from the Update Checker, hopefully eliminating any confusion about where they're coming
+ * from.  Added a few more call-backs to the listener so it can be notified if no update was
+ * found (not an error) or an error occurred during the check.  Restructured some of the public
+ * members to make the private, then added public read-only properties for them.
  * 
  * This program is Copyright 2012, Jeffrey T. Darlington.
  * E-mail:  jeff@gpf-comics.com
@@ -74,19 +76,6 @@ namespace com.gpfcomics.UpdateChecker
         #region Public Members
 
         /// <summary>
-        /// This is the time interval for update checks.  If the last update check was performed
-        /// within this interval, another update check should not be performed.  The current
-        /// value is seven days or one week.
-        /// </summary>
-        public static TimeSpan UpdateInterval = new TimeSpan(7, 0, 0, 0);
-
-        /// <summary>
-        /// If this flag is set to true, debugging will be turned on and we will get additional
-        /// feedback messages.  This should always be set to false for production releases.
-        /// </summary>
-        public bool Debug = false;
-
-        /// <summary>
         /// The size in bytes of the buffer used for reading and writing data.  This is no
         /// magic figure by any means, and may get tweaked if the current number is found
         /// to be inefficient.
@@ -94,15 +83,97 @@ namespace com.gpfcomics.UpdateChecker
         public const int BufferSize = 4096;
 
         /// <summary>
-        /// The file system path to which we'll download the update installer.  For now, it
-        /// defaults to the user's Desktop, although that may or may not be the best place
-        /// to put the file.
+        /// The <see cref="Uri"/> of the XML feed containing update information.
         /// </summary>
-        public string DownloadPath = null; 
+        public Uri FeedURI
+        {
+            get
+            {
+                return uri;
+            }
+        }
+
+        /// <summary>
+        /// If this flag is set to true, debugging will be turned on and we will get additional
+        /// feedback messages.  This should always be set to false for production releases.
+        /// </summary>
+        public bool Debug
+        {
+            get
+            {
+                return debug;
+            }
+        }
+
+        /// <summary>
+        /// This is the time interval for update checks.  If the last update check was performed
+        /// within this interval, another update check should not be performed.  The default
+        /// value is seven days or one week.
+        /// </summary>
+        public TimeSpan UpdateInterval
+        {
+            get
+            {
+                return updateInterval;
+            }
+        }
+
+        /// <summary>
+        /// The file system path to which we'll download the update installer.  This defaults
+        /// to the user's temporary files fold (the value of the %TEMP or %TMP environment
+        /// variables) or to the user's destkop folder.
+        /// </summary>
+        public string DownloadPath
+        {
+            get
+            {
+                return downloadPath;
+            }
+        }
+
+        /// <summary>
+        /// A flag to determine whether or not the user should be notified if there is no
+        /// update available, i.e. they have the latest version of the application.  The
+        /// default is false.
+        /// </summary>
+        public bool NotifyOnNoUpdate
+        {
+            get
+            {
+                return notifyOnNoUpdate;
+            }
+        }
 
         #endregion
 
         #region Private Members
+
+        /// <summary>
+        /// This is the time interval for update checks.  If the last update check was performed
+        /// within this interval, another update check should not be performed.  The default
+        /// value is seven days or one week.
+        /// </summary>
+        private static TimeSpan updateInterval = new TimeSpan(7, 0, 0, 0);
+
+        /// <summary>
+        /// If this flag is set to true, debugging will be turned on and we will get additional
+        /// feedback messages.  This should always be set to false for production releases.
+        /// </summary>
+        private bool debug = false;
+
+        /// <summary>
+        /// The file system path to which we'll download the update installer.  This defaults
+        /// to the user's temporary files fold (the value of the %TEMP or %TMP environment
+        /// variables) or to the user's destkop folder.
+        /// </summary>
+        private string downloadPath = null;
+
+        /// <summary>
+        /// A flag to determine whether or not the user should be notified if there is no
+        /// update available, i.e. they have the latest version of the application.  The
+        /// default is false.
+        /// </summary>
+        private bool notifyOnNoUpdate = false;
 
         /// <summary>
         /// This <see cref="BackgroundWorker"/> will do the grunt work of checking for updates
@@ -187,11 +258,13 @@ namespace com.gpfcomics.UpdateChecker
         /// if a new update has been found</param>
         /// <param name="lastCheck">A <see cref="DateTime"/> representing the last time the
         /// update check was performed</param>
+        /// <param name="intervalDays">The update check interval in days.  This must be a positive
+        /// integer greater than zero.  You cannot specify an update interval less than one day.</param>
         /// <param name="debug">Whether or not to show detailed error messages (true) or simple
         /// error messages (false)</param>
         /// <exception cref="Exception">Thrown if the download path could not be initialized</exception>
         public UpdateChecker(Uri uri, string appName, Version currentVersion,
-            IUpdateCheckListener listener, DateTime lastCheck, bool debug)
+            IUpdateCheckListener listener, DateTime lastCheck, int intervalDays, bool debug)
         {
             // Get the input parameters:
             this.uri = uri;
@@ -199,40 +272,51 @@ namespace com.gpfcomics.UpdateChecker
             this.currentVersion = currentVersion;
             this.listener = listener;
             this.lastCheck = lastCheck;
-            Debug = debug;
+            this.debug = debug;
             // Try to find the best place to save the download file.  We'll procced in the
             // following order:  The value of the %TEMP% environment variable, the value of
             // %TMP%, and lastly the user's desktop folder.  Try to get each one in turn.  If
             // anything goes wrong, we'll probably end up with a null or empty string.
             try
             {
-                DownloadPath = Environment.GetEnvironmentVariable("TEMP");
-                if (String.IsNullOrEmpty(DownloadPath))
+                downloadPath = Environment.GetEnvironmentVariable("TEMP");
+                if (String.IsNullOrEmpty(downloadPath))
                 {
-                    DownloadPath = Environment.GetEnvironmentVariable("TMP");
-                    if (String.IsNullOrEmpty(DownloadPath))
+                    downloadPath = Environment.GetEnvironmentVariable("TMP");
+                    if (String.IsNullOrEmpty(downloadPath))
                     {
-                        DownloadPath =
+                        downloadPath =
                             Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
                     }
                 }
             }
             catch
             {
-                DownloadPath = null;
+                downloadPath = null;
             }
             // Check the value of the download path.  If it ends up being empty, null, or it doesn't
             // point to a real place, throw an exception:
-            if (String.IsNullOrEmpty(DownloadPath) || !Directory.Exists(DownloadPath))
+            if (String.IsNullOrEmpty(downloadPath) || !Directory.Exists(downloadPath))
             {
                 throw new Exception("The Update Checker was unable to find a suitable place to " +
                     "download the update file to.  Please check for updates again later.");
             }
             // If the path looks good, make sure it ends with a directory separator before we
             // attempt to use it:
-            else if (!DownloadPath.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            else if (!downloadPath.EndsWith(Path.DirectorySeparatorChar.ToString()))
             {
-                DownloadPath += Path.DirectorySeparatorChar.ToString();
+                downloadPath += Path.DirectorySeparatorChar.ToString();
+            }
+            // The update check interval must a positive integer greater than one.  If it's
+            // anything else, complain:
+            if (intervalDays <= 0)
+            {
+                throw new Exception("The update check interval for the Update Checker must be " +
+                    "specified in days greater than or equal to one (1).");
+            }
+            else
+            {
+                updateInterval = new TimeSpan(intervalDays, 0, 0, 0);
             }
         }
 
@@ -249,12 +333,14 @@ namespace com.gpfcomics.UpdateChecker
         /// if a new update has been found</param>
         /// <param name="lastCheck">A <see cref="DateTime"/> representing the last time the
         /// update check was performed</param>
+        /// <param name="intervalDays">The update check interval in days.  This must be a positive
+        /// integer greater than zero.  You cannot specify an update interval less than one day.</param>
         /// <param name="debug">Whether or not to show detailed error messages (true) or simple
         /// error messages (false)</param>
         /// <exception cref="Exception">Thrown if the download path could not be initialized</exception>
         public UpdateChecker(string url, string appName, Version currentVersion,
-            IUpdateCheckListener listener, DateTime lastCheck, bool debug)
-            : this(new Uri(url), appName, currentVersion, listener, lastCheck, debug) { }
+            IUpdateCheckListener listener, DateTime lastCheck, int intervalDays, bool debug)
+            : this(new Uri(url), appName, currentVersion, listener, lastCheck, intervalDays, debug) { }
 
         /// <summary>
         /// Perform the actual update check.  This method launches a special worker thread
@@ -271,7 +357,7 @@ namespace com.gpfcomics.UpdateChecker
                 // Check the current time verses the last update date plus the update interval.
                 // If the current time is beyond the update interval, then it's time to launch
                 // the update check process.
-                if (lastCheck.Add(UpdateInterval).CompareTo(DateTime.Now) <= 0)
+                if (lastCheck.Add(updateInterval).CompareTo(DateTime.Now) <= 0)
                 {
                     // Make sure all the rest of our inputs are populated.  If they aren't,
                     // throw an exception and refuse to go any further:
@@ -301,8 +387,9 @@ namespace com.gpfcomics.UpdateChecker
             // we'll briefly report the error before closing.
             catch (Exception ex)
             {
-                if (Debug) MessageBox.Show(ex.ToString(), "Update Check Error", MessageBoxButtons.OK,
+                if (debug) MessageBox.Show(ex.ToString(), "Update Check Error", MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
+                listener.OnUpdateCheckError();
             }
         }
 
@@ -356,11 +443,12 @@ namespace com.gpfcomics.UpdateChecker
             // we'll complain):
             catch (Exception ex)
             {
-                if (Debug) MessageBox.Show(ex.ToString(), "Update Check Error", MessageBoxButtons.OK,
+                if (debug) MessageBox.Show(ex.ToString(), "Update Check Error", MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
                 else MessageBox.Show("An error occurred while trying to download the latest update. " +
                     "Please try again later.", "Update Check Error", MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
+                listener.OnUpdateCheckError();
             }
         }
 
@@ -544,13 +632,14 @@ namespace com.gpfcomics.UpdateChecker
             // (unless we're in debug mode, where we'll complain).
             catch (Exception ex)
             {
-                if (Debug) MessageBox.Show(ex.ToString(), "Update Check Error", MessageBoxButtons.OK,
+                if (debug) MessageBox.Show(ex.ToString(), "Update Check Error", MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
                 else MessageBox.Show("An error occurred while trying to perform the update check. "
                     + "Please check for updates again later.", "Update Check Error", MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
                 e.Result = Boolean.FalseString;
                 worker.CancelAsync();
+                listener.OnUpdateCheckError();
             }
         }
 
@@ -578,16 +667,20 @@ namespace com.gpfcomics.UpdateChecker
                     if (appMetaData.IsSameApp(appName) &&
                         appMetaData.IsNewerVersion(currentVersion))
                         listener.OnFoundNewerVersion();
+                    // If no update was found, let the listener decide whether or not the user
+                    // needs to be notified:
+                    else listener.OnNoUpdateFound();
                 }
             }
             // We'll ignore any errors for now (unless we're in debug mode):
             catch (Exception ex)
             {
-                if (Debug) MessageBox.Show(ex.ToString(), "Update Check Error", MessageBoxButtons.OK,
+                if (debug) MessageBox.Show(ex.ToString(), "Update Check Error", MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
                 else MessageBox.Show("An error occurred while trying to perform the update check. "
                     + "Please check for updates again later.", "Update Check Error", MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
+                listener.OnUpdateCheckError();
             }
         }
 
@@ -619,7 +712,7 @@ namespace com.gpfcomics.UpdateChecker
                 // We need somewhere to safe the downloaded file.  Create a string holding the
                 // path to the download folder, then tack on the last "segment" of the URI,
                 // which should be the file name.
-                downloadFile = DownloadPath +
+                downloadFile = downloadPath +
                     appMetaData.Uri.Segments[appMetaData.Uri.Segments.Length - 1];
                 // Create two streams, one output stream to our saved file and one input
                 // stream reading from the web client.  While we *could* take advantage of
@@ -669,12 +762,13 @@ namespace com.gpfcomics.UpdateChecker
             // If we encounter an error, cancel the worker:
             catch (Exception ex)
             {
-                if (Debug) MessageBox.Show(ex.ToString(), "Update Check Error", MessageBoxButtons.OK,
+                if (debug) MessageBox.Show(ex.ToString(), "Update Check Error", MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
                 else MessageBox.Show("An error occurred while trying to download the latest " +
                     "update. Please try again later.", "Update Check Error", MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
                 worker.CancelAsync();
+                listener.OnUpdateCheckError();
             }
         }
 
@@ -696,6 +790,7 @@ namespace com.gpfcomics.UpdateChecker
                     if (File.Exists(downloadFile)) File.Delete(downloadFile);
                     MessageBox.Show(e.Error.Message, "Update Check Error", MessageBoxButtons.OK,
                         MessageBoxIcon.Error);
+                    listener.OnUpdateCheckError();
                 }
                 // Similarly, if the user cancelled the download, close up shop but remind
                 // them they can download the file manually later:
@@ -743,11 +838,12 @@ namespace com.gpfcomics.UpdateChecker
             // Report any errors:
             catch (Exception ex)
             {
-                if (Debug) MessageBox.Show(ex.ToString(), "Update Check Error", MessageBoxButtons.OK,
+                if (debug) MessageBox.Show(ex.ToString(), "Update Check Error", MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
                 else MessageBox.Show("An error occurred while trying to download the latest " +
                     "update. Please try again later.", "Update Check Error", MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
+                listener.OnUpdateCheckError();
             }
         }
 
@@ -806,12 +902,13 @@ namespace com.gpfcomics.UpdateChecker
             }
             catch (Exception ex)
             {
-                if (Debug) MessageBox.Show(ex.ToString(), "Update Check Error", MessageBoxButtons.OK,
+                if (debug) MessageBox.Show(ex.ToString(), "Update Check Error", MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
                 else MessageBox.Show("An error occurred while trying to validate the downloaded " +
                     "update file. Please perform another update later.", "Update Check Error", MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
                 worker.CancelAsync();
+                listener.OnUpdateCheckError();
             }
         }
 
@@ -832,6 +929,7 @@ namespace com.gpfcomics.UpdateChecker
                     if (inStream != null) inStream.Close();
                     MessageBox.Show(e.Error.Message, "Update Check Error", MessageBoxButtons.OK,
                         MessageBoxIcon.Error);
+                    listener.OnUpdateCheckError();
                 }
                 // Similarly, if we were cancelled, close the stream but warn the user that
                 // we can't guarantee the file is good:
@@ -870,18 +968,23 @@ namespace com.gpfcomics.UpdateChecker
                         listener.OnRequestGracefulClose();
                     }
                     // If the digests didn't match, complain:
-                    else MessageBox.Show("The download did not appear to be successful. Please try " +
-                        "another update check later.", "Update Check Error", MessageBoxButtons.OK,
-                        MessageBoxIcon.Error);
+                    else
+                    {
+                        MessageBox.Show("The download did not appear to be successful. Please try " +
+                           "another update check later.", "Update Check Error", MessageBoxButtons.OK,
+                           MessageBoxIcon.Error);
+                        listener.OnUpdateCheckError();
+                    }
                 }
             }
             catch (Exception ex)
             {
-                if (Debug) MessageBox.Show(ex.ToString(), "Update Check Error", MessageBoxButtons.OK,
+                if (debug) MessageBox.Show(ex.ToString(), "Update Check Error", MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
                 else MessageBox.Show("An error occurred while trying to validate the downloaded " +
                     "update file. Please check for another update later.", "Update Check Error", MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
+                listener.OnUpdateCheckError();
             }
         }
 
