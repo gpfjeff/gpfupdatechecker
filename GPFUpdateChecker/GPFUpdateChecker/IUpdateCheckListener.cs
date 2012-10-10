@@ -101,6 +101,6 @@ namespace com.gpfcomics.UpdateChecker
         /// do nothing, but in some instances the caller may wish to perform some task when
         /// this situation occurs.
         /// </summary>
-        void OnDownloadCancelled();
+        void OnDownloadCanceled();
     }
 }

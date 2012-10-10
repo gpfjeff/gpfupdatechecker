@@ -440,7 +440,7 @@ namespace com.gpfcomics.UpdateChecker
                     MessageBox.Show("If you would like to download this update manually " +
                        "at a later time, please visit the official " + appName + " website.",
                        "Update Available", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    listener.OnDownloadCancelled();
+                    listener.OnDownloadCanceled();
                 }
             }
             // If anything blows up, silently exit (unless we're in debug mode, and then
@@ -642,8 +642,8 @@ namespace com.gpfcomics.UpdateChecker
                     + "Please check for updates again later.", "Update Check Error", MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
                 e.Result = Boolean.FalseString;
-                worker.CancelAsync();
                 listener.OnUpdateCheckError();
+                worker.CancelAsync();
             }
         }
 
@@ -771,8 +771,8 @@ namespace com.gpfcomics.UpdateChecker
                 else MessageBox.Show("An error occurred while trying to download the latest " +
                     "update. Please try again later.", "Update Check Error", MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
-                worker.CancelAsync();
                 listener.OnUpdateCheckError();
+                worker.CancelAsync();
             }
         }
 
@@ -911,8 +911,8 @@ namespace com.gpfcomics.UpdateChecker
                 else MessageBox.Show("An error occurred while trying to validate the downloaded " +
                     "update file. Please perform another update later.", "Update Check Error", MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
-                worker.CancelAsync();
                 listener.OnUpdateCheckError();
+                worker.CancelAsync();
             }
         }
 
