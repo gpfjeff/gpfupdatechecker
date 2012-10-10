@@ -435,9 +435,13 @@ namespace com.gpfcomics.UpdateChecker
                 }
                 // If the user decided to postpone the update, let them know they can still
                 // get it from the website later:
-                else MessageBox.Show("If you would like to download this update manually " +
-                    "at a later time, please visit the official " + appName + " website.",
-                    "Update Available", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                else
+                {
+                    MessageBox.Show("If you would like to download this update manually " +
+                       "at a later time, please visit the official " + appName + " website.",
+                       "Update Available", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    listener.OnDownloadCancelled();
+                }
             }
             // If anything blows up, silently exit (unless we're in debug mode, and then
             // we'll complain):

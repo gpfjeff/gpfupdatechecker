@@ -11,8 +11,8 @@
  * When an object wishes to be notified that a new version of an application has been found,
  * it just needs to inherit this interface and implement its methods.
  * 
- * UPDATES FOR VERSION 1.1:  Added the OnNoUpdateFound() and OnUpdateCheckError()
- * call-back methods.
+ * UPDATES FOR VERSION 1.1:  Added the OnNoUpdateFound(), OnUpdateCheckError(), and
+ * OnDownloadCancelled() call-back methods.
  * 
  * This program is Copyright 2012, Jeffrey T. Darlington.
  * E-mail:  jeff@gpf-comics.com
@@ -94,5 +94,13 @@ namespace com.gpfcomics.UpdateChecker
         /// close the application.
         /// </summary>
         void OnRequestGracefulClose();
+
+        /// <summary>
+        /// This method is called by the <see cref="UpdateChecker"/> if an update was found
+        /// but the user chose to cancel the download.  The simplest implementation here is to
+        /// do nothing, but in some instances the caller may wish to perform some task when
+        /// this situation occurs.
+        /// </summary>
+        void OnDownloadCancelled();
     }
 }
