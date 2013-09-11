@@ -35,9 +35,20 @@
  * found (not an error) or an error occurred during the check.  Restructured some of the public
  * members to make the private, then added public read-only properties for them.
  * 
- * This program is Copyright 2012, Jeffrey T. Darlington.
+ * UPDATES FOR VERSION 1.2:  Added new NotifyUserOfNewVersionOnly() method.  After the call to
+ * CheckForNewVersion() and the call-back to IUpdateCheckListener.OnFoundNewerVersion(), the
+ * listener now has the option of downloading and executing an installer (the old workflow by
+ * calling GetNewerVersion()) or simply notifying the user and letting them download the update
+ * manually.  The listender can do this by calling NotifyUserOfNewVersionOnly() instead of
+ * GetNewerVersion().  This will notify the user of the update and then optionally open their
+ * default browser to a URL where they can choose to download the update.  This is useful for
+ * cases where downloading and executing an installer is either not possible or undesired.
+ * In our case, we wanted to notify users of Cryptnos running the app under Mono on Linux or
+ * Mac OS of updates without dealing with Windows installers.
+ * 
+ * This program is Copyright 2013, Jeffrey T. Darlington.
  * E-mail:  jeff@gpf-comics.com
- * Web:     http://www.gpf-comics.com/
+ * Web:     https://code.google.com/p/gpfupdatechecker/
  * 
  * This program is free software; you can redistribute it and/or modify it under the terms of
  * the GNU General Public License as published by the Free Software Foundation; either version 2
@@ -450,6 +461,62 @@ namespace com.gpfcomics.UpdateChecker
                 if (debug) MessageBox.Show(ex.ToString(), "Update Check Error", MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
                 else MessageBox.Show("An error occurred while trying to download the latest update. " +
+                    "Please try again later.", "Update Check Error", MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                listener.OnUpdateCheckError();
+            }
+        }
+
+        /// <summary>
+        /// As an alternative to GetNewerVersion(), notify the user of a new version, but don't
+        /// download the installer.  Instead, direct the user to a website where they can
+        /// download the update manually.  This is useful for applications that don't use an
+        /// installer, or for situations where an installer can't otherwise be used (for example,
+        /// an app designed for Windows but running under Mono on Linux).
+        /// </summary>
+        /// <param name="downloadUrl">The URL for the website where the user can download
+        /// the new version</param>
+        public void NotifyUserOfNewVersionOnly(string downloadUrl)
+        {
+            // Asbestos underpants:
+            try
+            {
+                // Try to convert the incoming URL to a Uri object.  If this fails, it should
+                // throw an exception and shortcut the notification process.  (Brute force
+                // error checking here.)
+                Uri testIt = new Uri(downloadUrl);
+
+                // Inform the user that the new update is available.  They may not actually
+                // want the update right now, or it may be inconvenient to get it.  We should
+                // always let the user decide.
+                if (MessageBox.Show("A newer version of " + appName + " is available. Your " +
+                    "current version is " + currentVersion.ToString() + "; the new version " +
+                    "is " + appMetaData.Version.ToString() + ". Would you like to download " +
+                    " this update now?", "Update Available", MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question) == DialogResult.Yes)
+                {
+                    // Attempt to launch the user's default browser to the download URL.  Since
+                    // the calling app doesn't really need to do anything else, we'll reuse the
+                    // download cancelled call-back for now.
+                    System.Diagnostics.Process.Start(downloadUrl);
+                    listener.OnDownloadCanceled();
+                }
+                // If the user decided to postpone the update, let them know they can still
+                // get it from the website later:
+                else
+                {
+                    MessageBox.Show("If you would like to download this update manually " +
+                       "at a later time, please visit the official " + appName + " website.",
+                       "Update Available", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    listener.OnDownloadCanceled();
+                }
+            }
+            // If something blew up:
+            catch (Exception ex)
+            {
+                if (debug) MessageBox.Show(ex.ToString(), "Update Check Error", MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                else MessageBox.Show("An error occurred while trying to open your browser to the download site. " +
                     "Please try again later.", "Update Check Error", MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
                 listener.OnUpdateCheckError();

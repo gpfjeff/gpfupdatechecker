@@ -14,9 +14,11 @@
  * UPDATES FOR VERSION 1.1:  Added the OnNoUpdateFound(), OnUpdateCheckError(), and
  * OnDownloadCancelled() call-back methods.
  * 
- * This program is Copyright 2012, Jeffrey T. Darlington.
+ * UPDATES FOR VERSION 1.2:  Changed URL here in the comments.
+ * 
+ * This program is Copyright 2013, Jeffrey T. Darlington.
  * E-mail:  jeff@gpf-comics.com
- * Web:     http://www.gpf-comics.com/
+ * Web:     https://code.google.com/p/gpfupdatechecker/
  * 
  * This program is free software; you can redistribute it and/or modify it under the terms of
  * the GNU General Public License as published by the Free Software Foundation; either version 2

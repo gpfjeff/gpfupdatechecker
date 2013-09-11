@@ -14,9 +14,11 @@
  * 
  * UPDATES FOR VERSION 1.1:  A few tweaks to match the version 1.1 changes to the library.
  * 
- * This program is Copyright 2012, Jeffrey T. Darlington.
+ * UPDATES FOR VERSION 1.2:  A few tweaks to match the version 1.2 changes to the library.
+ * 
+ * This program is Copyright 2013, Jeffrey T. Darlington.
  * E-mail:  jeff@gpf-comics.com
- * Web:     http://www.gpf-comics.com/
+ * Web:     https://code.google.com/p/gpfupdatechecker/
  * 
  * This program is free software; you can redistribute it and/or modify it under the terms of
  * the GNU General Public License as published by the Free Software Foundation; either version 2
@@ -48,7 +50,7 @@ namespace com.gpfcomics.updatetest
         /// Cryptnos update feed; please change this to your own feed to test your update process.
         /// Note that the update checker constructor can take either a Uri or a URL string.
         /// </summary>
-        private Uri feedUri = new Uri("http://www.cryptnos.com/files/cryptnos_updates_feed.xmlx");
+        private Uri feedUri = new Uri("http://www.cryptnos.com/files/cryptnos_updates_feed.xml");
 
         /// <summary>
         /// The application name string.  This should match the "name" tag under "app" in the
@@ -95,6 +97,28 @@ namespace com.gpfcomics.updatetest
         /// </summary>
         private bool debug = true;
 
+        /// <summary>
+        /// This flag sets the behavior if a new update has been found.  If true, we'll download an
+        /// installer and attempt to run it automatically.  If false, we'll notify the user about the
+        /// update but they'll have to download it themselves.  This is just an placeholder for this
+        /// test application; a real application will have to decide for itself which case it should
+        /// use.  One example where BOTH behavior might be needed is a Windows application that can
+        /// potentially be run under Mono on another platform (such as Linux or Mac OS).  You may
+        /// want to download and execute an installer on Windows, but simply notify the user if they
+        /// are running under Mono.
+        /// </summary>
+        private bool downloadUpdate = false;
+
+        /// <summary>
+        /// If downloadUpdate is set to false, the update checker will attempt to open the user's
+        /// default Web browser to this URL.  Presumably, this will be where the user can download
+        /// the update manually.  Of course, this is only a sample; your application will need to
+        /// set whatever URL it needs.  We recommend, however, that you point to a Web page where
+        /// the user can make their own choice about downloading the app, rather than a binary,
+        /// archive, or installer file.
+        /// </summary>
+        private string notifyOnlyUrl = "http://www.cryptnos.com/";
+
         public Tester()
         {
             // Asbestos underpants:
@@ -139,7 +163,14 @@ namespace com.gpfcomics.updatetest
             //
             // Do whatever needs to be done before the user is notified, then call this method as
             // the final step:
-            updateChecker.GetNewerVersion();
+            if (downloadUpdate) updateChecker.GetNewerVersion();
+
+            // Conversely, if we don't to actually download the update automatically, we can
+            // notify the user and give them the option to download the update manually.  The
+            // UpdateChecker.NotifyUserOfNewVersionOnly() method displays a prompt to download
+            // the update similar to GetNewerVersion(), but instead of downloading an installer,
+            // it opens a URL so the user can download it themselves.
+            else updateChecker.NotifyUserOfNewVersionOnly(notifyOnlyUrl);
         }
 
         public void OnNoUpdateFound()
