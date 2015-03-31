@@ -12,31 +12,12 @@ Near the top of the XML file are a few standard, required headers.
 
 <?xml version="1.0" encoding="utf-8"?>
 <gpfupdate xmlns="http://www.gpf-comics.com/">
-<version>1
-
-Unknown end tag for &lt;/version&gt;
-
-
-<generator>Some application generated this
-
-Unknown end tag for &lt;/generator&gt;
-
-
-<comment>This is a test comment.
-
-Unknown end tag for &lt;/comment&gt;
-
-
-<pubDate>20100513140600
-
-Unknown end tag for &lt;/pubDate&gt;
-
-
+<version>1</version>
+<generator>Some application generated this</generator>
+<comment>This is a test comment.</comment>
+<pubDate>20100513140600</pubDate>
 // ...
-
-
-Unknown end tag for &lt;/gpfupdate&gt;
-
+</gpfupdate>
 
 ```
 
@@ -54,72 +35,21 @@ After `<pubDate>` above there is a comment signifying something else should foll
 ```xml
 
 <apps>
-<app>
-<name>Application 1
-
-Unknown end tag for &lt;/name&gt;
-
-
-<currentVer>1.0.0.0
-
-Unknown end tag for &lt;/currentVer&gt;
-
-
-<url>http://www.example.org/SomeInstallerFile1.exe
-
-Unknown end tag for &lt;/url&gt;
-
-
-<size>783850
-
-Unknown end tag for &lt;/size&gt;
-
-
-<digest>Dy7ubCve1vAMdqfnkCMm8yHCENBtAoXDQlKWV+yt6X0=
-
-Unknown end tag for &lt;/digest&gt;
-
-
-
-
-Unknown end tag for &lt;/app&gt;
-
-
-<app>
-<name>Application 2
-
-Unknown end tag for &lt;/name&gt;
-
-
-<currentVer>2.3.4.5
-
-Unknown end tag for &lt;/currentVer&gt;
-
-
-<url>http://www.example.org/SomeInstallerFile2.exe
-
-Unknown end tag for &lt;/url&gt;
-
-
-<size>783850
-
-Unknown end tag for &lt;/size&gt;
-
-
-<digest>Dy7ubCve1vAMdqfnkCMm8yHCENBtAoXDQlKWV+yt6X0=
-
-Unknown end tag for &lt;/digest&gt;
-
-
-
-
-Unknown end tag for &lt;/app&gt;
-
-
-
-
-Unknown end tag for &lt;/apps&gt;
-
+    <app>
+        <name>Application 1</name>
+        <currentVer>1.0.0.0</currentVer>
+        <url>http://www.example.org/SomeInstallerFile1.exe</url>
+        <size>783850</size>
+        <digest>Dy7ubCve1vAMdqfnkCMm8yHCENBtAoXDQlKWV+yt6X0=</digest>
+    </app>
+    <app>
+        <name>Application 2</name>
+        <currentVer>2.3.4.5</currentVer>
+        <url>http://www.example.org/SomeInstallerFile2.exe</url>
+        <size>783850</size>
+        <digest>Dy7ubCve1vAMdqfnkCMm8yHCENBtAoXDQlKWV+yt6X0=</digest>
+    </app>
+</apps>
 
 ```
 
