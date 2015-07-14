@@ -1,0 +1,5 @@
+GPFUpdateChecker/GPFUpdateChecker/bin
+GPFUpdateChecker/GPFUpdateChecker/obj
+UpdateCheckTester/UpdateCheckTester/bin
+UpdateCheckTester/UpdateCheckTester/obj
+*.suo
