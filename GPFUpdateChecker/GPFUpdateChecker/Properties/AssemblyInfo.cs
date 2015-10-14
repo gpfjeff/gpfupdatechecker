@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("GPF Comics")]
 [assembly: AssemblyProduct("GPF Comics Update Checker")]
-[assembly: AssemblyCopyright("© Copyright 2012, Jeffrey T. Darlington. All rights reserved.")]
+[assembly: AssemblyCopyright("© Copyright 2015, Jeffrey T. Darlington. All rights reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
