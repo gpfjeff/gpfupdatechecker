@@ -13,7 +13,7 @@
  * 
  * This program is Copyright 2010, Jeffrey T. Darlington.
  * E-mail:  jeff@gpf-comics.com
- * Web:     https://code.google.com/p/gpfupdatechecker/
+ * Web:     https://github.com/gpfjeff/gpfupdatechecker
  * 
  * This program is free software; you can redistribute it and/or modify it under the terms of
  * the GNU General Public License as published by the Free Software Foundation; either version 2

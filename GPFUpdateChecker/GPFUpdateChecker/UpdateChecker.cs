@@ -44,11 +44,13 @@
  * default browser to a URL where they can choose to download the update.  This is useful for
  * cases where downloading and executing an installer is either not possible or undesired.
  * In our case, we wanted to notify users of Cryptnos running the app under Mono on Linux or
- * Mac OS of updates without dealing with Windows installers.
+ * Mac OS of updates without dealing with Windows installers.  Also reset the download
+ * destination back to the user's desktop, since some organizations use policies to prevent
+ * applications from being run from the temp folders.
  * 
- * This program is Copyright 2013, Jeffrey T. Darlington.
+ * This program is Copyright 2015, Jeffrey T. Darlington.
  * E-mail:  jeff@gpf-comics.com
- * Web:     https://code.google.com/p/gpfupdatechecker/
+ * Web:     https://github.com/gpfjeff/gpfupdatechecker
  * 
  * This program is free software; you can redistribute it and/or modify it under the terms of
  * the GNU General Public License as published by the Free Software Foundation; either version 2
@@ -288,8 +290,14 @@ namespace com.gpfcomics.UpdateChecker
             // following order:  The value of the %TEMP% environment variable, the value of
             // %TMP%, and lastly the user's desktop folder.  Try to get each one in turn.  If
             // anything goes wrong, we'll probably end up with a null or empty string.
+            //
+            // UPDATE: Reverting this back to the desktop for now.  Many organizations use
+            // policies to prevent applications from being run from the temp folders, causing
+            // our downloads to fail.  We'll just have to let the user clean up after us
+            // for now.
             try
             {
+                /*
                 downloadPath = Environment.GetEnvironmentVariable("TEMP");
                 if (String.IsNullOrEmpty(downloadPath))
                 {
@@ -300,6 +308,9 @@ namespace com.gpfcomics.UpdateChecker
                             Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
                     }
                 }
+                */
+                downloadPath =
+                    Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
             }
             catch
             {
@@ -492,7 +503,7 @@ namespace com.gpfcomics.UpdateChecker
                 if (MessageBox.Show("A newer version of " + appName + " is available. Your " +
                     "current version is " + currentVersion.ToString() + "; the new version " +
                     "is " + appMetaData.Version.ToString() + ". Would you like to download " +
-                    " this update now?", "Update Available", MessageBoxButtons.YesNo,
+                    "this update now?", "Update Available", MessageBoxButtons.YesNo,
                     MessageBoxIcon.Question) == DialogResult.Yes)
                 {
                     // Attempt to launch the user's default browser to the download URL.  Since
@@ -1024,7 +1035,7 @@ namespace com.gpfcomics.UpdateChecker
                     if (appMetaData.DigestsMatch(digest))
                     {
                         MessageBox.Show("The updated version of " + appName + " has been " +
-                            "successfully downloaded and is ready to install. Please save " +
+                            "successfully downloaded to your desktop and is ready to install. Please save " +
                             "any work in the current version of the application. When you " +
                             "click OK, the updater will attempt to close the current version " +
                             "and launch the installer. If the current version does not close " +
